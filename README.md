@@ -26,3 +26,5 @@ ami zold vagy piros annak megfeleloen, hogy talalt-e hozza ervenyes intervallumo
 Amennyiben az adatbazisban nem szereplo kartyaid-t olvas be az olvaso akkor kep nelkul piros es az info sor helyen ismeretlen kartya: kartyaid szoveg szerepeljen.  
 Az ablak egy masik reszen listaszeruen szovegesen listazza az utolso nehany beolvasas adatat, diak txt elso sora, idopont, irany, ervenyes volt-e  
 Ezt a belepeseknel is frissiteni kell, es az egeszet naplofileba kell irni folyamatosan, a file neveben legyen benne a datum.
+
+Target OS: Windows 7 
