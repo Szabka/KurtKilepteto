@@ -32,7 +32,7 @@ namespace KurtKilepteto
 
                     MainForm mf = new MainForm();
                     var readerNames = GetReaderNames();
-
+                    Log.Information(string.Join(",", readerNames ) ) ;
                     if (NoReaderFound(readerNames))
                     {
                         Log.Error("There are currently no readers installed.");
