@@ -4,13 +4,14 @@ KurtKilepteto
 nyilvantartas.csv:  
     oszlopok: diakid, kartyaId  
     feladat: Olvasó leolvassa a kártya id-t, majd kikeresi a táblából a hozzá tartozó diák id-t.   
-    A diák id-k alapján vannak ugyanitt a fileok, minden diaknak 2 fileja van..  
+    A diák id-k alapján vannak ugyanitt a fileok, minden diaknak 2 fileja van. az id igazabol relativ utvonal a diakid.txt filehoz, tartalmazhat relativan meghivatkozott konyvtarneveket.
 
 diakid.jpg képfájl / ezeket indulaskor csekkolni kell, hogy jo meretuek -e es amelyik nem azt at kell meretezni.
 
 diakid.txt adatfájl:  
-    Elso sor diak nev.  
-    Masodik sor info a diakrol ez megjelenik a kepernyon, felul ide irjak a diak nevet, osztalyt, stb.  
+    Elso sor info a diakrol ez megjelenik a kepernyon, felul ide irjak a diak nevet, osztalyt, stb.  
+	Masodik sor info a diakrol , nem jelenik meg sehol ide lehet megjegyzeseker irni  
+	Harmadik sor kilepesi jogosultsag kezdete ev-honap-nap formaban. Ezzel adott ideig ki is lehet tiltani a kilepest, azon a napon mar mukodik.  
     Tovabbi sorok  
     oszlopok: nap, kezdet-veg  
     minta adatok: H, 8:30-9:15  
