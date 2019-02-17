@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Serilog;
+using System.Configuration;
 
 namespace KurtKilepteto
 {
@@ -72,17 +73,26 @@ namespace KurtKilepteto
             }
             textBox1.Invoke(new Action(() => textBox1.Text = newText));
 
-            dict = File.ReadLines("configs\\nyilvantartas.csv").Select(line => line.Split(';')).ToDictionary(line => line[0], line => line[1]);
-
-            if (dict.ContainsKey(cardID))
+            //student is trying go out
+            if (ConfigurationManager.AppSettings["exitreadername"].Equals(readerName))
             {
-                ShowStudentData(cardID, dict[cardID]);
+
+                dict = File.ReadLines("configs\\nyilvantartas.csv").Select(line => line.Split(';')).ToDictionary(line => line[0], line => line[1]);
+                if (dict.ContainsKey(cardID))
+                {
+                    ShowStudentData(cardID, dict[cardID]);
+                }
+                else
+                {
+                    //TODO inform user - student or card not found
+                    this.pictureBoxStudentFace.BackColor = Color.Red;
+                    label1.Invoke(new Action(() => label1.Text = "Student not found with this CardID! Foreign card!"));
+                    textBox1.Invoke(new Action(() => textBox1.Text = "Student not found with this CardID! Foreign card!" + cardID));
+                }
+
             } else
             {
-                //TODO inform user - student or card not found
-                this.pictureBoxStudentFace.BackColor = Color.Red;
-                label1.Invoke(new Action(() => label1.Text = "Student not found with this CardID! Foreign card!"));
-                textBox1.Invoke(new Action(() => textBox1.Text = "Student not found with this CardID! Foreign card!" + cardID));
+                //TODO what should we do?
             }
 
             
@@ -171,14 +181,15 @@ namespace KurtKilepteto
 
         private void ShowStudentPicture(string studentID)
         {
-
-            //TODO: combine path!
-            Image studImg = Image.FromFile("configs\\" + studentID + ".jpg");
+            string currPath = (System.Environment.CurrentDirectory) + "\\configs\\";           
+            Image studImg = Image.FromFile(Path.GetFullPath(Path.Combine(currPath, studentID))  + ".jpg");
             this.pictureBoxStudentFace.Image = studImg;
-
-            //TODO: combined path is possible for eg: ..\ etc. 
+            
         }
 
-       
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
     }
 }
