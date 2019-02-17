@@ -86,8 +86,9 @@ namespace KurtKilepteto
                 {
                     //TODO inform user - student or card not found
                     this.pictureBoxStudentFace.BackColor = Color.Red;
-                    label1.Invoke(new Action(() => label1.Text = "Student not found with this CardID! Foreign card!"));
-                    textBox1.Invoke(new Action(() => textBox1.Text = "Student not found with this CardID! Foreign card!" + cardID));
+                    label1.Invoke(new Action(() => label1.Text = "Student not found with this CardID! Foreign card! (Ismeretlen kartya) " + cardID));
+                    textBox1.Invoke(new Action(() => textBox1.Text = "Student not found with this CardID! Foreign card! (Ismeretlen kartya) " + cardID));
+                    Log.Information("Student not found with this CardID! Foreign card! (Ismeretlen kartya) " + cardID);
                 }
 
             } else
@@ -160,6 +161,7 @@ namespace KurtKilepteto
                                     //student can exit
                                     //log on screen and in file the used rule
                                     textBox1.Invoke(new Action(() => textBox1.Text += DateTime.Now +   " Exit is allowed! Rule: " + lines[i] + " studentID: " + studentID + Environment.NewLine));
+                                    Log.Information(" Exit is allowed! Rule: " + lines[i] + " studentID: " + studentID);
                                     return true;
                             }
                         }
@@ -169,12 +171,14 @@ namespace KurtKilepteto
 
                 //all rules are checked but allowance not found
                 textBox1.Invoke(new Action(() => textBox1.Text += DateTime.Now + " Exit is not allowed to " + lines[0] + " studentID: " + studentID + Environment.NewLine));
+                Log.Information(" Exit is not allowed to " + lines[0] + " studentID: " + studentID);
                 return false;
             }
             else
             {
                 //currently is not valid student
-                textBox1.Invoke(new Action(() => textBox1.Text = "Exit is not allowed! Student is not valid today! " ));
+                textBox1.Invoke(new Action(() => textBox1.Text = "Exit is not allowed! Student is not valid today! " + studentID));
+                Log.Information("Exit is not allowed! Student is not valid today! " + studentID);
                 return false;
             }
         }
