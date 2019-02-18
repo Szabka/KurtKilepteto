@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Serilog;
 using System.Configuration;
+using System.Drawing.Imaging;
 
 namespace KurtKilepteto
 {
@@ -32,7 +33,6 @@ namespace KurtKilepteto
             dict = File.ReadLines(ConfigurationManager.AppSettings["configdir"]+"\\nyilvantartas.csv").Select(line => line.Split(';')).ToDictionary(line => line[0], line => line[1]);
 
             imageRemove = new System.Timers.Timer();
-            imageRemove.Enabled = true;
             imageRemove.AutoReset = false;
             imageRemove.Interval = int.Parse(ConfigurationManager.AppSettings["imageshowtime"]) * SECOND;
             imageRemove.Elapsed += ImageRemoveTick;
@@ -67,7 +67,7 @@ namespace KurtKilepteto
                 {
                     Image resizedImage = resizeImage(studImg, new Size(480, 640));
                     studImg.Dispose(); //otherwise we have to save with different name
-                    resizedImage.Save(Path.GetFullPath(Path.Combine(currPath, line)) + ".jpg");
+                    resizedImage.Save(Path.GetFullPath(Path.Combine(currPath, line)) + ".jpg",ImageFormat.Jpeg);
                 }
             }
 
@@ -83,7 +83,7 @@ namespace KurtKilepteto
         
         public void AddEvent(string eventContent)
         {
-            cardEvents.Enqueue(eventContent);
+            cardEvents.Enqueue(DateTime.Now.ToString("H:mm:s") +" "+eventContent);
             if (cardEvents.Count >= 15)
                 cardEvents.Dequeue();
 

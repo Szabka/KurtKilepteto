@@ -35,19 +35,18 @@ namespace KurtKilepteto
                     MainForm mf = new MainForm();
                     var readerNames = GetReaderNames();
                     Log.Information(string.Join(",", readerNames ) ) ;
-                    if (NoReaderFound(readerNames))
+                    if (!NoReaderFound(readerNames))
+                    {
+                        var monitorFactory = new MonitorFactory(_contextFactory);
+                        var monitor = monitorFactory.Create(SCardScope.System);
+                        monitor.CardInserted += (sender, args) => ProcessEvent(mf, args);
+                        monitor.MonitorException += MonitorException;
+
+                        monitor.Start(readerNames);
+                    } else
                     {
                         Log.Error("There are currently no readers installed.");
-                        return;
                     }
-                    var monitorFactory = new MonitorFactory(_contextFactory);
-                    var monitor = monitorFactory.Create(SCardScope.System);
-                    monitor.CardInserted += (sender, args) => ProcessEvent(mf, args);
-                    monitor.MonitorException += MonitorException;
-
-                    monitor.Start(readerNames);
-
-
                     Log.Information("KurtKilepteto Started");
 
                     Application.Run(mf);
