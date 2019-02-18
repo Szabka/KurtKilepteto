@@ -19,7 +19,7 @@ namespace KurtKilepteto
         private const int SECOND = 1000;
         Queue<string> cardEvents = new Queue<string>();
         Dictionary<string, string> dict = new Dictionary<string, string>();
-        Timer imageRemove; // kep eltunteto timer
+        System.Timers.Timer imageRemove; // kep eltunteto timer
 
         public MainForm()
         {
@@ -31,13 +31,16 @@ namespace KurtKilepteto
             OptimizePicturesSize();
             dict = File.ReadLines(ConfigurationManager.AppSettings["configdir"]+"\\nyilvantartas.csv").Select(line => line.Split(';')).ToDictionary(line => line[0], line => line[1]);
 
-            imageRemove = new System.Windows.Forms.Timer();
+            imageRemove = new System.Timers.Timer();
             imageRemove.Enabled = true;
-            imageRemove.Tick += new EventHandler(ImageRemoveTick);
-            imageRemove.Interval = 100;//int.Parse(ConfigurationManager.AppSettings["imageshowtime"]) * SECOND;
+            imageRemove.AutoReset = false;
+            imageRemove.Interval = int.Parse(ConfigurationManager.AppSettings["imageshowtime"]) * SECOND;
+            imageRemove.Elapsed += ImageRemoveTick;
+            imageRemove.SynchronizingObject = this;
+
         }
 
-        private void ImageRemoveTick(Object myObject, EventArgs myEventArgs)
+        private void ImageRemoveTick(Object myObject, System.Timers.ElapsedEventArgs myEventArgs)
         {
             Log.Information("ImageRemoveTick called");
             label1.Invoke(new Action(() => label1.Text = "")); // empty label
@@ -46,7 +49,6 @@ namespace KurtKilepteto
                 this.pictureBoxStudentFace.Image.Dispose();
                 this.pictureBoxStudentFace.Image = null;
             }
-//            imageRemove.Enabled = false;
         }
 
         private void OptimizePicturesSize()
@@ -99,7 +101,7 @@ namespace KurtKilepteto
         {
             Log.Information("card read event received;" + readerName + ";" + cardID);
             AddEvent(readerName + ";" + cardID);
-            imageRemove.Enabled = false;
+            imageRemove.Stop();
             //student is trying go out
             if (ConfigurationManager.AppSettings["exitreadername"].Equals(readerName))
             {
@@ -154,7 +156,6 @@ namespace KurtKilepteto
                 //we know this student, but can't validate the exit based on rules
                 this.panel1.BackColor = Color.Red;
             }
-            //imageRemove.Enabled = true;
             imageRemove.Start();
 
             ShowStudentPicture(dict[cardID]);
