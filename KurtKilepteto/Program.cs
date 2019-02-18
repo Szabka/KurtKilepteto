@@ -25,8 +25,10 @@ namespace KurtKilepteto
                     Application.EnableVisualStyles();
                     Application.SetCompatibleTextRenderingDefault(false);
 
+                    string logFilename = "kk_" + DateTime.Now.ToString("yyyy-MM-dd")+"_log.txt";
+
                     Log.Logger = new LoggerConfiguration()
-                        .WriteTo.File("kk_log.txt")
+                        .WriteTo.File(logFilename)
                         .WriteTo.Trace()
                         .CreateLogger();
 

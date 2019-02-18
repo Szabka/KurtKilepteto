@@ -16,8 +16,11 @@ namespace KurtKilepteto
 {
     public partial class MainForm : Form
     {
+        private const int SECOND = 1000;
         Queue<string> cardEvents = new Queue<string>();
         Dictionary<string, string> dict = new Dictionary<string, string>();
+        Timer imageRemove; // kep eltunteto timer
+
         public MainForm()
         {
             InitializeComponent();
@@ -26,13 +29,32 @@ namespace KurtKilepteto
         private void Form1_Load(object sender, EventArgs e)
         {
             OptimizePicturesSize();
+            dict = File.ReadLines(ConfigurationManager.AppSettings["configdir"]+"\\nyilvantartas.csv").Select(line => line.Split(';')).ToDictionary(line => line[0], line => line[1]);
+
+            imageRemove = new System.Windows.Forms.Timer();
+            imageRemove.Enabled = true;
+            imageRemove.Tick += new EventHandler(ImageRemoveTick);
+            imageRemove.Interval = 100;//int.Parse(ConfigurationManager.AppSettings["imageshowtime"]) * SECOND;
+        }
+
+        private void ImageRemoveTick(Object myObject, EventArgs myEventArgs)
+        {
+            Log.Information("ImageRemoveTick called");
+            label1.Invoke(new Action(() => label1.Text = "")); // empty label
+            if (this.pictureBoxStudentFace.Image != null)
+            {
+                this.pictureBoxStudentFace.Image.Dispose();
+                this.pictureBoxStudentFace.Image = null;
+            }
+//            imageRemove.Enabled = false;
         }
 
         private void OptimizePicturesSize()
         {
+            AddEvent("Student image resize started.");
             //read all possible image path in an array
-            var lines = File.ReadAllLines("configs\\nyilvantartas.csv").Select(a => a.Split(';')[1]);
-            string currPath = (System.Environment.CurrentDirectory) + "\\configs\\";
+            var lines = File.ReadAllLines(ConfigurationManager.AppSettings["configdir"]+"\\nyilvantartas.csv").Select(a => a.Split(';')[1]);
+            string currPath = ConfigurationManager.AppSettings["configdir"] + "\\";
 
             //select and resize every image what we should
             foreach (var line in lines)
@@ -47,7 +69,7 @@ namespace KurtKilepteto
                 }
             }
 
-            MessageBox.Show("Student images are resized!");
+            AddEvent("Student image resize finished.");
 
         }
 
@@ -57,27 +79,30 @@ namespace KurtKilepteto
         }
 
         
-
-        public void CardRead(string readerName, String cardID)
+        public void AddEvent(string eventContent)
         {
-            Log.Information("card read event received;" + readerName + ";" + cardID);
-            cardEvents.Enqueue(readerName + ";" + cardID );
-            if (cardEvents.Count >= 10)
+            cardEvents.Enqueue(eventContent);
+            if (cardEvents.Count >= 15)
                 cardEvents.Dequeue();
 
             string newText = "";
             foreach (string cardEvent in cardEvents)
             {
                 newText += cardEvent;
-                newText += "\r\n";
+                newText += Environment.NewLine;
             }
             textBox1.Invoke(new Action(() => textBox1.Text = newText));
 
+        }
+
+        public void CardRead(string readerName, String cardID)
+        {
+            Log.Information("card read event received;" + readerName + ";" + cardID);
+            AddEvent(readerName + ";" + cardID);
+            imageRemove.Enabled = false;
             //student is trying go out
             if (ConfigurationManager.AppSettings["exitreadername"].Equals(readerName))
             {
-
-                dict = File.ReadLines("configs\\nyilvantartas.csv").Select(line => line.Split(';')).ToDictionary(line => line[0], line => line[1]);
                 if (dict.ContainsKey(cardID))
                 {
                     ShowStudentData(cardID, dict[cardID]);
@@ -87,16 +112,23 @@ namespace KurtKilepteto
                     //TODO inform user - student or card not found
                     this.pictureBoxStudentFace.BackColor = Color.Red;
                     label1.Invoke(new Action(() => label1.Text = "Student not found with this CardID! Foreign card! (Ismeretlen kartya) " + cardID));
-                    textBox1.Invoke(new Action(() => textBox1.Text = "Student not found with this CardID! Foreign card! (Ismeretlen kartya) " + cardID));
+                    AddEvent("Student not found with this CardID! Foreign card! (Ismeretlen kartya) " + cardID);
                     Log.Information("Student not found with this CardID! Foreign card! (Ismeretlen kartya) " + cardID);
                 }
 
-            } else
-            {
-                //TODO what should we do?
             }
+            else if (ConfigurationManager.AppSettings["entrancereadername"].Equals(readerName))
+            {
+                ImageRemoveTick(null, null);
+                if (dict.ContainsKey(cardID))
+                {
+                }
+            }
+        }
 
-            
+        private int entryValidation()
+        {
+            return -1;
         }
 
         private void ShowStudentData(string cardID, string studentID)
@@ -104,10 +136,10 @@ namespace KurtKilepteto
       
             //set culture to hungarian
             var culture = new CultureInfo("hu-HU");
-            var day = culture.DateTimeFormat.GetDayName(DateTime.Today.AddDays(1).DayOfWeek);
+            var day = culture.DateTimeFormat.GetDayName(DateTime.Today.DayOfWeek);
            
             //read student's txt
-            string currPath = (System.Environment.CurrentDirectory) + "\\configs\\";
+            string currPath = ConfigurationManager.AppSettings["configdir"]+"\\";
             string[] lines = File.ReadLines(Path.GetFullPath(Path.Combine(currPath, studentID)) + ".txt", Encoding.UTF8).ToArray();
 
             //decide if exit is allowed
@@ -122,6 +154,9 @@ namespace KurtKilepteto
                 //we know this student, but can't validate the exit based on rules
                 this.panel1.BackColor = Color.Red;
             }
+            //imageRemove.Enabled = true;
+            imageRemove.Start();
+
             ShowStudentPicture(dict[cardID]);
             label1.Invoke(new Action(() => label1.Text = lines[0]));
 
@@ -160,7 +195,7 @@ namespace KurtKilepteto
                             {
                                     //student can exit
                                     //log on screen and in file the used rule
-                                    textBox1.Invoke(new Action(() => textBox1.Text += DateTime.Now +   " Exit is allowed! Rule: " + lines[i] + " studentID: " + studentID + Environment.NewLine));
+                                    AddEvent( DateTime.Now +   " Exit is allowed! Rule: " + lines[i] + " studentID: " + studentID);
                                     Log.Information(" Exit is allowed! Rule: " + lines[i] + " studentID: " + studentID);
                                     return true;
                             }
@@ -170,14 +205,14 @@ namespace KurtKilepteto
 
 
                 //all rules are checked but allowance not found
-                textBox1.Invoke(new Action(() => textBox1.Text += DateTime.Now + " Exit is not allowed to " + lines[0] + " studentID: " + studentID + Environment.NewLine));
+                AddEvent(DateTime.Now + " Exit is not allowed to " + lines[0] + " studentID: " + studentID);
                 Log.Information(" Exit is not allowed to " + lines[0] + " studentID: " + studentID);
                 return false;
             }
             else
             {
                 //currently is not valid student
-                textBox1.Invoke(new Action(() => textBox1.Text = "Exit is not allowed! Student is not valid today! " + studentID));
+                AddEvent("Exit is not allowed! Student is not valid today! " + studentID);
                 Log.Information("Exit is not allowed! Student is not valid today! " + studentID);
                 return false;
             }
@@ -185,7 +220,12 @@ namespace KurtKilepteto
 
         private void ShowStudentPicture(string studentID)
         {
-            string currPath = (System.Environment.CurrentDirectory) + "\\configs\\";           
+            if (this.pictureBoxStudentFace.Image!=null)
+            {
+                this.pictureBoxStudentFace.Image.Dispose();
+                this.pictureBoxStudentFace.Image = null;
+            }
+            string currPath = ConfigurationManager.AppSettings["configdir"] + "\\";           
             Image studImg = Image.FromFile(Path.GetFullPath(Path.Combine(currPath, studentID))  + ".jpg");
             this.pictureBoxStudentFace.Image = studImg;
             
