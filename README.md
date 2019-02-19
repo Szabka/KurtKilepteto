@@ -29,3 +29,12 @@ Az ablak egy masik reszen listaszeruen szovegesen listazza az utolso nehany beol
 Ezt a belepeseknel is frissiteni kell, es az egeszet naplofileba kell irni folyamatosan, a file neveben legyen benne a datum.
 
 Target OS: Windows 7 
+
+
+#diakinfo kep felett ket sorban
+#ora:perc:ms diak txt elso sora
+#eredmeny
+
+#Kep kovetkezo olvasaskor, vagy x masodperc utan automatikusan eltunik
+#indulaskor bele teszi a nevebe a datumot de autorotate nincs
+#naplofile, ev-ho-nap ora-perc-ms,kartyaid, diak elso sora, esemenytipus, esemenyeredmeny
