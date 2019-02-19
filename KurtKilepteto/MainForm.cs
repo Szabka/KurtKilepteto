@@ -42,19 +42,23 @@ namespace KurtKilepteto
 
         private void ImageRemoveTick(Object myObject, System.Timers.ElapsedEventArgs myEventArgs)
         {
-            Log.Information("ImageRemoveTick called");
             label1.Invoke(new Action(() => label1.Text = "")); // empty label
+            this.pictureBoxStudentFace.BackColor = System.Drawing.SystemColors.Control;
+            DisposeImage();
+        }
+
+        private void DisposeImage()
+        {
             if (this.pictureBoxStudentFace.Image != null)
             {
                 this.pictureBoxStudentFace.Image.Dispose();
                 this.pictureBoxStudentFace.Image = null;
             }
-            this.panel1.BackColor = System.Drawing.SystemColors.Control;
         }
 
         private void OptimizePicturesSize()
         {
-            AddEvent("Student image resize started.");
+            //AddEvent("Student image resize started.");
             //read all possible image path in an array
             var lines = File.ReadAllLines(ConfigurationManager.AppSettings["configdir"]+"\\nyilvantartas.csv").Select(a => a.Split(';')[1]);
             string currPath = ConfigurationManager.AppSettings["configdir"] + "\\";
@@ -72,7 +76,7 @@ namespace KurtKilepteto
                 }
             }
 
-            AddEvent("Student image resize finished.");
+            //AddEvent("Student image resize finished.");
 
         }
 
@@ -84,12 +88,12 @@ namespace KurtKilepteto
         
         public void AddEvent(string eventContent)
         {
-            cardEvents.Enqueue(DateTime.Now.ToString("H:mm:s") +" "+eventContent);
-            if (cardEvents.Count >= 15)
+            cardEvents.Enqueue(DateTime.Now.ToString("HH:mm:ss") +" "+eventContent);
+            if (cardEvents.Count >= 10)
                 cardEvents.Dequeue();
 
             string newText = "";
-            foreach (string cardEvent in cardEvents)
+            foreach (string cardEvent in cardEvents.Reverse())
             {
                 newText += cardEvent;
                 newText += Environment.NewLine;
@@ -101,17 +105,15 @@ namespace KurtKilepteto
 
         public void CardRead(string readerName, String cardID)
         {
-            Log.Information("card read event received;" + readerName + ";" + cardID);
-            AddEvent(readerName + ";" + cardID);
-            imageRemove.Stop();
+            Log.Debug("DEBUG,"+readerName + ";" + cardID);
             //student is trying go out
             if (ConfigurationManager.AppSettings["exitreadername"].Equals(readerName))
             {
+                imageRemove.Stop();
                 if (dict.ContainsKey(cardID))
                 {
                     string studentID = dict[cardID];
                     ShowStudentPicture(studentID);
-                    imageRemove.Start();
 
                     StudentData sd = new StudentData(dict[cardID]);
                     label1.Invoke(new Action(() => label1.Text = sd.StudentInfo));
@@ -121,70 +123,71 @@ namespace KurtKilepteto
                         if (sd.HasMatchingRule(DateTime.Now))
                         {
                             //student exit is allowed               
-                            AddEvent(DateTime.Now + " Exit is allowed! studentID: " + studentID);
-                            Log.Information(" Exit is allowed! studentID: " + studentID);
-                            this.panel1.BackColor = Color.Green;
+                            AddEvent(sd.ShortInfo+Environment.NewLine+ "Érvényes kilépés");
+                            Log.Information(cardID+",EXIT,Érvényes kilépés," +sd.ShortInfo + "," + studentID);
+                            this.pictureBoxStudentFace.BackColor = Color.Green;
                         }
                         else
                         {
                             //we know this student, but can't validate the exit based on rules
-                            AddEvent(DateTime.Now + " Exit is not allowed to " + sd.StudentInfo + " studentID: " + studentID);
-                            Log.Information(" Exit is not allowed to " + sd.StudentInfo + " studentID: " + studentID);
-                            this.panel1.BackColor = Color.Red;
+                            AddEvent(sd.ShortInfo + Environment.NewLine + "Érvénytelen kilépés");
+                            Log.Information(cardID + ",EXIT,Érvénytelen kilépés," + sd.ShortInfo + "," + studentID);
+                            this.pictureBoxStudentFace.BackColor = Color.Red;
                         }
                     }
                     else
                     {
-                        AddEvent("Exit is not allowed! Student is not valid today! " + studentID);
-                        Log.Information("Exit is not allowed! Student is not valid today! " + studentID);
+                        AddEvent(sd.ShortInfo + Environment.NewLine + "Érvénytelen kártya " + sd.ValidFromS);
+                        Log.Information(cardID + ",EXIT,Érvénytelen kártya," + sd.ShortInfo+","+ sd.ValidFromS);
+                        this.pictureBoxStudentFace.BackColor = Color.Red;
                     }
                 }
                 else
                 {
-                    //TODO inform user - student or card not found
+                    DisposeImage();
                     this.pictureBoxStudentFace.BackColor = Color.Red;
-                    label1.Invoke(new Action(() => label1.Text = "Student not found with this CardID! Foreign card! (Ismeretlen kartya) " + cardID));
-                    AddEvent("Student not found with this CardID! Foreign card! (Ismeretlen kartya) " + cardID);
-                    Log.Information("Student not found with this CardID! Foreign card! (Ismeretlen kartya) " + cardID);
+                    label1.Invoke(new Action(() => label1.Text = "Ismeretlen kártya" + Environment.NewLine + cardID));
+                    AddEvent("Ismeretlen kártya " + Environment.NewLine + cardID);
+                    Log.Information(cardID + ",EXIT,Ismeretlen kártya");
                 }
-
+                imageRemove.Start();
             }
             else if (ConfigurationManager.AppSettings["entrancereadername"].Equals(readerName))
             {
                 if (dict.ContainsKey(cardID))
                 {
-                    StudentData sd = new StudentData(dict[cardID]);
+                    string studentID = dict[cardID];
+                    StudentData sd = new StudentData(studentID);
                     if (sd.CardValid(DateTime.Now))
                     {
                         if (sd.HasMatchingRule(DateTime.Now))
                         {
-                            Log.Information("ENTRY,Ervenyes belepes " + cardID);
+                            Log.Information(cardID + ",ENTRY,Érvényes belépés," + sd.ShortInfo + "," + studentID);
                         }
                         else
                         {
-                            Log.Information("ENTRY,Idon kivuli belepes " + cardID);
+                            Log.Information(cardID + ",ENTRY,Érvénytelen belépés," + sd.ShortInfo + "," + studentID);
                         }
                     }
                     else
                     {
-                        Log.Information("ENTRY,Kartya nem ervenyes " + cardID);
+                        Log.Information(cardID + ",ENTRY,Érvénytelen kártya," + sd.ShortInfo + "," + sd.ValidFromS);
 
                     }
                     {
-                        Log.Information("ENTRY,Student not found with this CardID! Foreign card! (Ismeretlen kartya) " + cardID);
+                        Log.Information(cardID + ",ENTRY,Ismeretlen kártya," + cardID);
                     }
                 }
+            } else
+            {
+                Log.Information("UNKNOWN,card read event received," + readerName + "," + cardID);
             }
         }
 
 
         private void ShowStudentPicture(string studentID)
         {
-            if (this.pictureBoxStudentFace.Image!=null)
-            {
-                this.pictureBoxStudentFace.Image.Dispose();
-                this.pictureBoxStudentFace.Image = null;
-            }
+            DisposeImage();
             string currPath = ConfigurationManager.AppSettings["configdir"] + "\\";           
             Image studImg = Image.FromFile(Path.GetFullPath(Path.Combine(currPath, studentID))  + ".jpg");
             this.pictureBoxStudentFace.Image = studImg;
@@ -194,6 +197,10 @@ namespace KurtKilepteto
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Application.Exit();
+        }
+        private void DetectReadersMenuItem_Click(object sender, EventArgs e)
+        {
+            AddEvent("READERLIST"+ Environment.NewLine + string.Join(Environment.NewLine, Program.GetReaderNames()));
         }
     }
 }

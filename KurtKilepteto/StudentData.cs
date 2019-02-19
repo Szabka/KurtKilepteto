@@ -13,7 +13,8 @@ namespace KurtKilepteto
         private string studentInfo;
         private string shortInfo;
         private string studentNote;
-        private DateTime validFrom;
+        private DateTime ValidFrom;
+        private string validFromS;
         private string[] rules;
 
         public StudentData(string studentID)
@@ -26,7 +27,9 @@ namespace KurtKilepteto
             ShortInfo = lines[0];
             StudentInfo = lines[0] + Environment.NewLine + lines[1];
             studentNote = lines[2];
-            validFrom = new DateTime(Convert.ToInt32(lines[3].Split('-')[0]), Convert.ToInt32(lines[3].Split('-')[1]), Convert.ToInt32(lines[3].Split('-')[2]));
+            ValidFromS = lines[3];
+            string[] dateparts = lines[3].Split('-');
+            ValidFrom = new DateTime(Convert.ToInt32(dateparts[0]), Convert.ToInt32(dateparts[1]), Convert.ToInt32(dateparts[2]));
             rules = new string[lines.Length - 4];
             System.Array.Copy(lines,4,rules,0,lines.Length-4);
         }
@@ -34,10 +37,11 @@ namespace KurtKilepteto
         public string StudentID { get => studentID; set => studentID = value; }
         public string StudentInfo { get => studentInfo; set => studentInfo = value; }
         public string ShortInfo { get => shortInfo; set => shortInfo = value; }
+        public string ValidFromS { get => validFromS; set => validFromS = value; }
 
         public Boolean CardValid(DateTime d)
         {
-            return (DateTime.Compare(validFrom, d) <= 0);
+            return (DateTime.Compare(ValidFrom, d) <= 0);
         }
 
         public Boolean HasMatchingRule(DateTime d)

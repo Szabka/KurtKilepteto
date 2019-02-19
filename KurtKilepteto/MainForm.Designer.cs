@@ -73,18 +73,20 @@
             // panel2
             // 
             this.panel2.Controls.Add(this.label1);
-            this.panel2.Location = new System.Drawing.Point(20, 3);
+            this.panel2.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(480, 126);
+            this.panel2.Size = new System.Drawing.Size(525, 126);
             this.panel2.TabIndex = 2;
             // 
             // label1
             // 
             this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.label1.Location = new System.Drawing.Point(0, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(480, 126);
+            this.label1.Padding = new System.Windows.Forms.Padding(0, 10, 0, 0);
+            this.label1.Size = new System.Drawing.Size(525, 126);
             this.label1.TabIndex = 2;
             this.label1.Text = "Waiting for cards...";
             this.label1.TextAlign = System.Drawing.ContentAlignment.TopCenter;
@@ -106,7 +108,7 @@
             // textBox1
             // 
             this.textBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.textBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F);
             this.textBox1.Location = new System.Drawing.Point(534, 3);
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
@@ -152,6 +154,7 @@
             this.detectReadersToolStripMenuItem.Name = "detectReadersToolStripMenuItem";
             this.detectReadersToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.detectReadersToolStripMenuItem.Text = "Detect Readers";
+            this.detectReadersToolStripMenuItem.Click += new System.EventHandler(this.DetectReadersMenuItem_Click);
             // 
             // MainForm
             // 
