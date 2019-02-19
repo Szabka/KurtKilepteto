@@ -49,6 +49,7 @@ namespace KurtKilepteto
                 this.pictureBoxStudentFace.Image.Dispose();
                 this.pictureBoxStudentFace.Image = null;
             }
+            this.panel1.BackColor = System.Drawing.SystemColors.Control;
         }
 
         private void OptimizePicturesSize()
@@ -128,9 +129,80 @@ namespace KurtKilepteto
             }
         }
 
-        private int entryValidation()
+        private int entryValidation(string cardID)
         {
-            return -1;
+            if (dict.ContainsKey(cardID))
+            {
+                string studentID = dict[cardID];
+                //set culture to hungarian
+                var culture = new CultureInfo("hu-HU");
+                var day = culture.DateTimeFormat.GetDayName(DateTime.Today.DayOfWeek);
+
+                string[] lines = ReadStudentData(studentID);
+                DateTime validFrom = new DateTime(Convert.ToInt32(lines[2].Split('-')[0]), Convert.ToInt32(lines[2].Split('-')[1]), Convert.ToInt32(lines[2].Split('-')[2]));
+                if (DateTime.Compare(validFrom, DateTime.Now) <= 0)
+                {
+                    //validFrom is actual now, 
+
+                    //search lines which are valid currently
+                    for (int i = 3; i < lines.Length; i++)
+                    {
+                        string hunAbrevDayName = lines[i].Split(',')[0];
+
+                        if (!string.IsNullOrEmpty(hunAbrevDayName))
+                            if ((day.ToUpper().StartsWith(hunAbrevDayName.ToUpper())) || hunAbrevDayName.Equals("*"))
+                            {
+                                //allowed interval on specific day
+                                string fullInterval = lines[i].Split(',')[1]; ;
+                                string intervalStart = fullInterval.Split('-')[0];
+                                string intervalEnd = fullInterval.Split('-')[1];
+
+                                DateTime startDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, Convert.ToInt32(intervalStart.Split(':')[0]), Convert.ToInt32(intervalStart.Split(':')[1]), 0);
+                                DateTime endDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, Convert.ToInt32(intervalEnd.Split(':')[0]), Convert.ToInt32(intervalEnd.Split(':')[1]), 0);
+
+                                //start time of exit is in the past or not
+                                if (DateTime.Compare(startDate, DateTime.Now) <= 0)
+                                {
+                                    //end time of exit is in the future
+                                    if (DateTime.Compare(endDate, DateTime.Now) > 0)
+                                    {
+                                        //student can exit
+                                        //log on screen and in file the used rule
+                                        AddEvent(DateTime.Now + " Exit is allowed! Rule: " + lines[i] + " studentID: " + studentID);
+                                        Log.Information(" Exit is allowed! Rule: " + lines[i] + " studentID: " + studentID);
+                                        return 1;
+                                    }
+                                }
+                            }
+                    }
+
+
+                    //all rules are checked but allowance not found
+                    AddEvent(DateTime.Now + " Exit is not allowed to " + lines[0] + " studentID: " + studentID);
+                    Log.Information(" Exit is not allowed to " + lines[0] + " studentID: " + studentID);
+                    return -2;
+                }
+                else
+                {
+                    //currently is not valid student
+                    AddEvent("Exit is not allowed! Student is not valid today! " + studentID);
+                    Log.Information("Exit is not allowed! Student is not valid today! " + studentID);
+                    return -3;
+                }
+
+            }
+            else
+            {
+                return -1;
+            }
+        }
+
+        private static string[] ReadStudentData(string studentID)
+        {
+            //read student's txt
+            string currPath = ConfigurationManager.AppSettings["configdir"] + "\\";
+            string[] lines = File.ReadLines(Path.GetFullPath(Path.Combine(currPath, studentID)) + ".txt", Encoding.UTF8).ToArray();
+            return lines;
         }
 
         private void ShowStudentData(string cardID, string studentID)
