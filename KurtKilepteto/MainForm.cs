@@ -61,17 +61,7 @@ namespace KurtKilepteto
         public void CardRead(string readerName, String cardID)
         {
             Log.Information("card read event received;" + readerName + ";" + cardID);
-            cardEvents.Enqueue(readerName + ";" + cardID );
-            if (cardEvents.Count >= 10)
-                cardEvents.Dequeue();
-
-            string newText = "";
-            foreach (string cardEvent in cardEvents)
-            {
-                newText += cardEvent;
-                newText += "\r\n";
-            }
-            textBox1.Invoke(new Action(() => textBox1.Text = newText));
+            LogIntoTextBox(readerName +";"+ cardID);
 
             //student is trying go out
             if (ConfigurationManager.AppSettings["exitreadername"].Equals(readerName))
@@ -91,12 +81,28 @@ namespace KurtKilepteto
                     Log.Information("Student not found with this CardID! Foreign card! (Ismeretlen kartya) " + cardID);
                 }
 
-            } else
+            }
+            else
             {
                 //TODO what should we do?
             }
 
-            
+
+        }
+
+        private void LogIntoTextBox(string message)
+        {
+            cardEvents.Enqueue(message);
+            if (cardEvents.Count >= 10)
+                cardEvents.Dequeue();
+
+            string newText = "";
+            foreach (string cardEvent in cardEvents)
+            {
+                newText += cardEvent;
+                newText += "\r\n";
+            }
+            textBox1.Invoke(new Action(() => textBox1.Text = newText));
         }
 
         private void ShowStudentData(string cardID, string studentID)
@@ -104,7 +110,7 @@ namespace KurtKilepteto
       
             //set culture to hungarian
             var culture = new CultureInfo("hu-HU");
-            var day = culture.DateTimeFormat.GetDayName(DateTime.Today.AddDays(1).DayOfWeek);
+            var day = culture.DateTimeFormat.GetDayName(DateTime.Today.DayOfWeek);
            
             //read student's txt
             string currPath = (System.Environment.CurrentDirectory) + "\\configs\\";
@@ -177,7 +183,7 @@ namespace KurtKilepteto
             else
             {
                 //currently is not valid student
-                textBox1.Invoke(new Action(() => textBox1.Text = "Exit is not allowed! Student is not valid today! " + studentID));
+                textBox1.Invoke(new Action(() => textBox1.Text += "Exit is not allowed! Student is not valid today! " + studentID));
                 Log.Information("Exit is not allowed! Student is not valid today! " + studentID);
                 return false;
             }
