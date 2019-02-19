@@ -76,7 +76,7 @@ namespace KurtKilepteto
 
         }
 
-        public  Image resizeImage(Image imgToResize, Size size)
+        public static Image resizeImage(Image imgToResize, Size size)
         {
             return (Image)(new Bitmap(imgToResize, size));
         }
@@ -93,6 +93,7 @@ namespace KurtKilepteto
             {
                 newText += cardEvent;
                 newText += Environment.NewLine;
+                newText += Environment.NewLine;
             }
             textBox1.Invoke(new Action(() => textBox1.Text = newText));
 
@@ -108,7 +109,35 @@ namespace KurtKilepteto
             {
                 if (dict.ContainsKey(cardID))
                 {
-                    ShowStudentData(cardID, dict[cardID]);
+                    string studentID = dict[cardID];
+                    ShowStudentPicture(studentID);
+                    imageRemove.Start();
+
+                    StudentData sd = new StudentData(dict[cardID]);
+                    label1.Invoke(new Action(() => label1.Text = sd.StudentInfo));
+
+                    if (sd.CardValid(DateTime.Now))
+                    {
+                        if (sd.HasMatchingRule(DateTime.Now))
+                        {
+                            //student exit is allowed               
+                            AddEvent(DateTime.Now + " Exit is allowed! studentID: " + studentID);
+                            Log.Information(" Exit is allowed! studentID: " + studentID);
+                            this.panel1.BackColor = Color.Green;
+                        }
+                        else
+                        {
+                            //we know this student, but can't validate the exit based on rules
+                            AddEvent(DateTime.Now + " Exit is not allowed to " + sd.StudentInfo + " studentID: " + studentID);
+                            Log.Information(" Exit is not allowed to " + sd.StudentInfo + " studentID: " + studentID);
+                            this.panel1.BackColor = Color.Red;
+                        }
+                    }
+                    else
+                    {
+                        AddEvent("Exit is not allowed! Student is not valid today! " + studentID);
+                        Log.Information("Exit is not allowed! Student is not valid today! " + studentID);
+                    }
                 }
                 else
                 {
@@ -122,174 +151,32 @@ namespace KurtKilepteto
             }
             else if (ConfigurationManager.AppSettings["entrancereadername"].Equals(readerName))
             {
-                ImageRemoveTick(null, null);
                 if (dict.ContainsKey(cardID))
                 {
-                }
-            }
-        }
-
-        private int entryValidation(string cardID)
-        {
-            if (dict.ContainsKey(cardID))
-            {
-                string studentID = dict[cardID];
-                //set culture to hungarian
-                var culture = new CultureInfo("hu-HU");
-                var day = culture.DateTimeFormat.GetDayName(DateTime.Today.DayOfWeek);
-
-                string[] lines = ReadStudentData(studentID);
-                DateTime validFrom = new DateTime(Convert.ToInt32(lines[2].Split('-')[0]), Convert.ToInt32(lines[2].Split('-')[1]), Convert.ToInt32(lines[2].Split('-')[2]));
-                if (DateTime.Compare(validFrom, DateTime.Now) <= 0)
-                {
-                    //validFrom is actual now, 
-
-                    //search lines which are valid currently
-                    for (int i = 3; i < lines.Length; i++)
+                    StudentData sd = new StudentData(dict[cardID]);
+                    if (sd.CardValid(DateTime.Now))
                     {
-                        string hunAbrevDayName = lines[i].Split(',')[0];
-
-                        if (!string.IsNullOrEmpty(hunAbrevDayName))
-                            if ((day.ToUpper().StartsWith(hunAbrevDayName.ToUpper())) || hunAbrevDayName.Equals("*"))
-                            {
-                                //allowed interval on specific day
-                                string fullInterval = lines[i].Split(',')[1]; ;
-                                string intervalStart = fullInterval.Split('-')[0];
-                                string intervalEnd = fullInterval.Split('-')[1];
-
-                                DateTime startDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, Convert.ToInt32(intervalStart.Split(':')[0]), Convert.ToInt32(intervalStart.Split(':')[1]), 0);
-                                DateTime endDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, Convert.ToInt32(intervalEnd.Split(':')[0]), Convert.ToInt32(intervalEnd.Split(':')[1]), 0);
-
-                                //start time of exit is in the past or not
-                                if (DateTime.Compare(startDate, DateTime.Now) <= 0)
-                                {
-                                    //end time of exit is in the future
-                                    if (DateTime.Compare(endDate, DateTime.Now) > 0)
-                                    {
-                                        //student can exit
-                                        //log on screen and in file the used rule
-                                        AddEvent(DateTime.Now + " Exit is allowed! Rule: " + lines[i] + " studentID: " + studentID);
-                                        Log.Information(" Exit is allowed! Rule: " + lines[i] + " studentID: " + studentID);
-                                        return 1;
-                                    }
-                                }
-                            }
-                    }
-
-
-                    //all rules are checked but allowance not found
-                    AddEvent(DateTime.Now + " Exit is not allowed to " + lines[0] + " studentID: " + studentID);
-                    Log.Information(" Exit is not allowed to " + lines[0] + " studentID: " + studentID);
-                    return -2;
-                }
-                else
-                {
-                    //currently is not valid student
-                    AddEvent("Exit is not allowed! Student is not valid today! " + studentID);
-                    Log.Information("Exit is not allowed! Student is not valid today! " + studentID);
-                    return -3;
-                }
-
-            }
-            else
-            {
-                return -1;
-            }
-        }
-
-        private static string[] ReadStudentData(string studentID)
-        {
-            //read student's txt
-            string currPath = ConfigurationManager.AppSettings["configdir"] + "\\";
-            string[] lines = File.ReadLines(Path.GetFullPath(Path.Combine(currPath, studentID)) + ".txt", Encoding.UTF8).ToArray();
-            return lines;
-        }
-
-        private void ShowStudentData(string cardID, string studentID)
-        {
-      
-            //set culture to hungarian
-            var culture = new CultureInfo("hu-HU");
-            var day = culture.DateTimeFormat.GetDayName(DateTime.Today.DayOfWeek);
-           
-            //read student's txt
-            string currPath = ConfigurationManager.AppSettings["configdir"]+"\\";
-            string[] lines = File.ReadLines(Path.GetFullPath(Path.Combine(currPath, studentID)) + ".txt", Encoding.UTF8).ToArray();
-
-            //decide if exit is allowed
-            bool exitIsValid = ExitValidation(lines, day, studentID);
-            if (exitIsValid)
-            {
-                //student exit is allowed               
-                this.panel1.BackColor = Color.Green;
-
-            } else
-            {
-                //we know this student, but can't validate the exit based on rules
-                this.panel1.BackColor = Color.Red;
-            }
-            imageRemove.Start();
-
-            ShowStudentPicture(dict[cardID]);
-            label1.Invoke(new Action(() => label1.Text = lines[0]));
-
-            // label1.Invoke(new Action(() => label1.Text = d.DayOfWeek.ToString()     ));
-
-        }
-
-        private bool ExitValidation(string[] lines, string day, string studentID)
-        {
-            DateTime validFrom = new DateTime( Convert.ToInt32( lines[2].Split('-')[0] ), Convert.ToInt32(lines[2].Split('-')[1]), Convert.ToInt32(lines[2].Split('-')[2]));
-            if ( DateTime.Compare(validFrom, DateTime.Now ) <=0  )
-            {
-                //validFrom is actual now, 
-
-                //search lines which are valid currently
-                for (int i = 3; i < lines.Length; i++)
-                {
-                    string hunAbrevDayName = lines[i].Split(',')[0];
-
-                    if ( ! string.IsNullOrEmpty(  hunAbrevDayName  ) )
-                    if (  (day.ToUpper().StartsWith(hunAbrevDayName.ToUpper()))  || hunAbrevDayName.Equals("*"))
-                    {
-                        //allowed interval on specific day
-                        string fullInterval = lines[i].Split(',')[1]; ;
-                        string intervalStart = fullInterval.Split('-')[0];
-                        string intervalEnd = fullInterval.Split('-')[1];
-
-                        DateTime startDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, Convert.ToInt32(intervalStart.Split(':')[0]), Convert.ToInt32(intervalStart.Split(':')[1]), 0);
-                        DateTime endDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, Convert.ToInt32(intervalEnd.Split(':')[0]), Convert.ToInt32(intervalEnd.Split(':')[1]), 0);
-
-                        //start time of exit is in the past or not
-                        if (DateTime.Compare (startDate, DateTime.Now) <=0 )
+                        if (sd.HasMatchingRule(DateTime.Now))
                         {
-                            //end time of exit is in the future
-                            if (DateTime.Compare(endDate, DateTime.Now) > 0)
-                            {
-                                    //student can exit
-                                    //log on screen and in file the used rule
-                                    AddEvent( DateTime.Now +   " Exit is allowed! Rule: " + lines[i] + " studentID: " + studentID);
-                                    Log.Information(" Exit is allowed! Rule: " + lines[i] + " studentID: " + studentID);
-                                    return true;
-                            }
+                            Log.Information("ENTRY,Ervenyes belepes " + cardID);
+                        }
+                        else
+                        {
+                            Log.Information("ENTRY,Idon kivuli belepes " + cardID);
                         }
                     }
+                    else
+                    {
+                        Log.Information("ENTRY,Kartya nem ervenyes " + cardID);
+
+                    }
+                    {
+                        Log.Information("ENTRY,Student not found with this CardID! Foreign card! (Ismeretlen kartya) " + cardID);
+                    }
                 }
-
-
-                //all rules are checked but allowance not found
-                AddEvent(DateTime.Now + " Exit is not allowed to " + lines[0] + " studentID: " + studentID);
-                Log.Information(" Exit is not allowed to " + lines[0] + " studentID: " + studentID);
-                return false;
-            }
-            else
-            {
-                //currently is not valid student
-                AddEvent("Exit is not allowed! Student is not valid today! " + studentID);
-                Log.Information("Exit is not allowed! Student is not valid today! " + studentID);
-                return false;
             }
         }
+
 
         private void ShowStudentPicture(string studentID)
         {

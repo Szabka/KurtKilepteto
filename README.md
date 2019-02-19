@@ -34,6 +34,7 @@ Target OS: Windows 7
 #diakinfo kep felett ket sorban
 #ora:perc:ms diak txt elso sora
 #eredmeny
+#elvalaszto
 
 #Kep kovetkezo olvasaskor, vagy x masodperc utan automatikusan eltunik
 #indulaskor bele teszi a nevebe a datumot de autorotate nincs

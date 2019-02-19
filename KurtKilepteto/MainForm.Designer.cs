@@ -30,8 +30,9 @@
         {
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.pictureBoxStudentFace = new System.Windows.Forms.PictureBox();
+            this.panel2 = new System.Windows.Forms.Panel();
             this.label1 = new System.Windows.Forms.Label();
+            this.pictureBoxStudentFace = new System.Windows.Forms.PictureBox();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -40,6 +41,7 @@
             this.detectReadersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanel1.SuspendLayout();
             this.panel1.SuspendLayout();
+            this.panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxStudentFace)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -55,48 +57,60 @@
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 1;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(1061, 706);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(1061, 801);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.panel2);
             this.panel1.Controls.Add(this.pictureBoxStudentFace);
-            this.panel1.Controls.Add(this.label1);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(3, 3);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(525, 700);
+            this.panel1.Size = new System.Drawing.Size(525, 795);
             this.panel1.TabIndex = 3;
             // 
-            // pictureBoxStudentFace
+            // panel2
             // 
-            this.pictureBoxStudentFace.BackColor = System.Drawing.SystemColors.ActiveCaption;
-            this.pictureBoxStudentFace.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pictureBoxStudentFace.Location = new System.Drawing.Point(13, 102);
-            this.pictureBoxStudentFace.Name = "pictureBoxStudentFace";
-            this.pictureBoxStudentFace.Size = new System.Drawing.Size(502, 595);
-            this.pictureBoxStudentFace.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.pictureBoxStudentFace.TabIndex = 1;
-            this.pictureBoxStudentFace.TabStop = false;
+            this.panel2.Controls.Add(this.label1);
+            this.panel2.Location = new System.Drawing.Point(20, 3);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(480, 126);
+            this.panel2.TabIndex = 2;
             // 
             // label1
             // 
-            this.label1.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.label1.Location = new System.Drawing.Point(13, 11);
+            this.label1.Location = new System.Drawing.Point(0, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(502, 88);
+            this.label1.Size = new System.Drawing.Size(480, 126);
             this.label1.TabIndex = 2;
             this.label1.Text = "Waiting for cards...";
             this.label1.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             // 
+            // pictureBoxStudentFace
+            // 
+            this.pictureBoxStudentFace.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.pictureBoxStudentFace.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.pictureBoxStudentFace.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pictureBoxStudentFace.Location = new System.Drawing.Point(20, 135);
+            this.pictureBoxStudentFace.Margin = new System.Windows.Forms.Padding(20);
+            this.pictureBoxStudentFace.Name = "pictureBoxStudentFace";
+            this.pictureBoxStudentFace.Padding = new System.Windows.Forms.Padding(20);
+            this.pictureBoxStudentFace.Size = new System.Drawing.Size(480, 640);
+            this.pictureBoxStudentFace.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pictureBoxStudentFace.TabIndex = 1;
+            this.pictureBoxStudentFace.TabStop = false;
+            // 
             // textBox1
             // 
+            this.textBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.textBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBox1.Location = new System.Drawing.Point(534, 3);
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(521, 697);
+            this.textBox1.Size = new System.Drawing.Size(524, 795);
             this.textBox1.TabIndex = 0;
             // 
             // menuStrip1
@@ -143,7 +157,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1067, 745);
+            this.ClientSize = new System.Drawing.Size(1067, 825);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
@@ -153,6 +167,7 @@
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.panel1.ResumeLayout(false);
+            this.panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxStudentFace)).EndInit();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
@@ -173,6 +188,7 @@
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem detectReadersToolStripMenuItem;
+        private System.Windows.Forms.Panel panel2;
     }
 }
 
