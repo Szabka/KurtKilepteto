@@ -1,4 +1,6 @@
-﻿namespace KurtKilepteto
+﻿using System;
+
+namespace KurtKilepteto
 {
     partial class MainForm
     {
@@ -39,6 +41,7 @@
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectReadersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.switchEventsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanel1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -144,7 +147,8 @@
             // settingsToolStripMenuItem
             // 
             this.settingsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.detectReadersToolStripMenuItem});
+            this.detectReadersToolStripMenuItem,
+            this.switchEventsToolStripMenuItem});
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
             this.settingsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
             this.settingsToolStripMenuItem.Text = "Settings";
@@ -152,9 +156,16 @@
             // detectReadersToolStripMenuItem
             // 
             this.detectReadersToolStripMenuItem.Name = "detectReadersToolStripMenuItem";
-            this.detectReadersToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.detectReadersToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.detectReadersToolStripMenuItem.Text = "Detect Readers";
             this.detectReadersToolStripMenuItem.Click += new System.EventHandler(this.DetectReadersMenuItem_Click);
+            // 
+            // switchEventsToolStripMenuItem
+            // 
+            this.switchEventsToolStripMenuItem.Name = "switchEventsToolStripMenuItem";
+            this.switchEventsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.switchEventsToolStripMenuItem.Text = "SwitchEvents";
+            this.switchEventsToolStripMenuItem.Click += new System.EventHandler(this.SwitchEventsMenuItem_Click);
             // 
             // MainForm
             // 
@@ -192,6 +203,7 @@
         private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem detectReadersToolStripMenuItem;
         private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.ToolStripMenuItem switchEventsToolStripMenuItem;
     }
 }
 

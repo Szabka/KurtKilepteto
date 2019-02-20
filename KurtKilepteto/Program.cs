@@ -137,7 +137,7 @@ namespace KurtKilepteto
                             responseApdu.SW1,
                             responseApdu.SW2,
                             responseApdu.HasData ? BitConverter.ToString(responseApdu.GetData()) : "No uid received");
-                        return responseApdu.HasData ? BitConverter.ToString(responseApdu.GetData()).Replace("-", "") : null;
+                        return responseApdu.HasData ? BitConverter.ToString(responseApdu.GetData()).Replace("-", "").ToUpper() : null;
                     }
 
                 }

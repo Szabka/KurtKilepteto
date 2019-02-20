@@ -12,23 +12,24 @@ using System.Windows.Forms;
 using Serilog;
 using System.Configuration;
 using System.Drawing.Imaging;
+using System.Drawing.Drawing2D;
 
-namespace KurtKilepteto
-{
-    public partial class MainForm : Form
-    {
+namespace KurtKilepteto {
+    public partial class MainForm:Form {
         private const int SECOND = 1000;
-        Queue<string> cardEvents = new Queue<string>();
+        Queue<string> cardExitEvents = new Queue<string>();
+        Queue<string> cardEntryEvents = new Queue<string>();
         Dictionary<string, string> dict = new Dictionary<string, string>();
         System.Timers.Timer imageRemove; // kep eltunteto timer
+        string currPath;
+        Boolean showEntryEvents;
 
-        public MainForm()
-        {
+        public MainForm() {
             InitializeComponent();
         }
 
-        private void Form1_Load(object sender, EventArgs e)
-        {
+        private void Form1_Load(object sender, EventArgs e) {
+            currPath = ConfigurationManager.AppSettings["configdir"] + "\\";
             dict = new Dictionary<string, string>();
 
             imageRemove = new System.Timers.Timer();
@@ -38,194 +39,184 @@ namespace KurtKilepteto
             imageRemove.SynchronizingObject = this;
             imageRemove.Stop();
 
-            var lines = File.ReadAllLines(ConfigurationManager.AppSettings["configdir"] + "\\nyilvantartas.csv");
-            foreach (var liner in lines)
-            {
-                if (liner.Length>1&&!liner.StartsWith("#"))
-                {
+            showEntryEvents = false;
+
+            var lines = File.ReadAllLines(currPath + "nyilvantartas.csv");
+            foreach (var liner in lines) {
+                if (liner.Length > 1 && !liner.StartsWith("#") && liner.Contains(",")) {
                     string[] linearr = liner.Split(',');
-                    if (linearr.Length==2)
-                    {
-                        dict.Add(linearr[1].ToUpper(),linearr[0]);
+                    if (linearr.Length == 2&&linearr[1].Length==8) { // Csak akkor foglalkozunk vele, ha a cardid bennevan
+                        dict.Add(linearr[1].ToUpper(), linearr[0]);
                     }
                 }
             }
-
-            OptimizePicturesSize();
         }
 
-        private void ImageRemoveTick(Object myObject, System.Timers.ElapsedEventArgs myEventArgs)
-        {
+        private void ImageRemoveTick(Object myObject, System.Timers.ElapsedEventArgs myEventArgs) {
             label1.Invoke(new Action(() => label1.Text = "")); // empty label
             this.pictureBoxStudentFace.BackColor = System.Drawing.SystemColors.Control;
             DisposeImage();
         }
 
-        private void DisposeImage()
-        {
-            if (this.pictureBoxStudentFace.Image != null)
-            {
+        private void DisposeImage() {
+            if (this.pictureBoxStudentFace.Image != null) {
                 this.pictureBoxStudentFace.Image.Dispose();
                 this.pictureBoxStudentFace.Image = null;
             }
         }
 
-        private void OptimizePicturesSize()
-        {
-            //AddEvent("Student image resize started.");
-            //read all possible image path in an array
-            var lines = File.ReadAllLines(ConfigurationManager.AppSettings["configdir"]+"\\nyilvantartas.csv");
-            string currPath = ConfigurationManager.AppSettings["configdir"] + "\\";
-
-            //select and resize every image what we should
-            foreach (var liner in lines)
-            {
-                string[] linearr = liner.Split(','); 
-                if (!liner.StartsWith("#")&&linearr.Length==2) {
-                    string imagepath = Path.GetFullPath(Path.Combine(currPath, linearr[0])) + ".jpg";
-                    if (File.Exists(imagepath))
-                    {
-                        Image studImg = Image.FromFile(imagepath);
-
-                        if (studImg.Width != 480 || studImg.Height != 640)
-                        {
-                            Image resizedImage = resizeImage(studImg, new Size(480, 640));
-                            studImg.Dispose(); //otherwise we have to save with different name
-                            resizedImage.Save(Path.GetFullPath(Path.Combine(currPath, linearr[0])) + ".jpg", ImageFormat.Jpeg);
-                        }
-                    }
-                }
+        public void AddEvent(Boolean entry,string eventContent) {
+            Queue<string> localQueue = entry ? cardEntryEvents : cardExitEvents;
+            localQueue.Enqueue(DateTime.Now.ToString("HH:mm:ss") + " " + eventContent);
+            if (localQueue.Count > 10) {
+                localQueue.Dequeue();
             }
 
-            //AddEvent("Student image resize finished.");
-
+            ShowEvents();
         }
 
-        public static Image resizeImage(Image imgToResize, Size size)
-        {
-            return (Image)(new Bitmap(imgToResize, size));
-        }
-
-        
-        public void AddEvent(string eventContent)
-        {
-            cardEvents.Enqueue(DateTime.Now.ToString("HH:mm:ss") +" "+eventContent);
-            if (cardEvents.Count >= 10)
-                cardEvents.Dequeue();
-
+        private void ShowEvents() {
+            Queue<string> localQueue = showEntryEvents ? cardEntryEvents : cardExitEvents;
             string newText = "";
-            foreach (string cardEvent in cardEvents.Reverse())
-            {
+            foreach (string cardEvent in localQueue.Reverse()) {
                 newText += cardEvent;
                 newText += Environment.NewLine;
                 newText += Environment.NewLine;
             }
             textBox1.Invoke(new Action(() => textBox1.Text = newText));
-
         }
 
-        public void CardRead(string readerName, String cardID)
-        {
-            Log.Debug("DEBUG,"+readerName + ";" + cardID);
+        public void CardRead(string readerName, String cardID) {
+            Log.Debug("DEBUG," + readerName + ";" + cardID);
             //student is trying go out
-            if (ConfigurationManager.AppSettings["exitreadername"].Equals(readerName))
-            {
+            if (ConfigurationManager.AppSettings["exitreadername"].Equals(readerName)) {
                 imageRemove.Stop();
-                if (dict.ContainsKey(cardID))
-                {
+                if (dict.ContainsKey(cardID)) {
                     string studentID = dict[cardID];
                     ShowStudentPicture(studentID);
 
-                    StudentData sd = new StudentData(dict[cardID]);
-                    label1.Invoke(new Action(() => label1.Text = sd.StudentInfo));
-
-                    if (sd.CardValid(DateTime.Now))
-                    {
-                        if (sd.HasMatchingRule(DateTime.Now))
-                        {
-                            //student exit is allowed               
-                            AddEvent(sd.ShortInfo+Environment.NewLine+ "Érvényes kilépés");
-                            Log.Information(cardID+",EXIT,Érvényes kilépés," +sd.ShortInfo + "," + studentID);
-                            this.pictureBoxStudentFace.BackColor = Color.Green;
-                        }
-                        else
-                        {
-                            //we know this student, but can't validate the exit based on rules
-                            AddEvent(sd.ShortInfo + Environment.NewLine + "Érvénytelen kilépés");
-                            Log.Information(cardID + ",EXIT,Érvénytelen kilépés," + sd.ShortInfo + "," + studentID);
+                    StudentData sd = StudentData.Load(dict[cardID]);
+                    if (sd==null) {
+                        AddEvent(false, "Diák adatok nem beolvashatóak " + Environment.NewLine + dict[cardID]);
+                        Log.Information(cardID + ",EXIT,Adathiba,"+dict[cardID]);
+                    } else {
+                        label1.Invoke(new Action(() => label1.Text = sd.StudentInfo));
+                        if (sd.CardValid(DateTime.Now)) {
+                            if (sd.HasMatchingRule(DateTime.Now)) {
+                                //student exit is allowed               
+                                AddEvent(false, sd.ShortInfo + Environment.NewLine + "Érvényes kilépés");
+                                Log.Information(cardID + ",EXIT,Érvényes kilépés," + sd.ShortInfo + "," + studentID);
+                                this.pictureBoxStudentFace.BackColor = Color.Green;
+                            } else {
+                                //we know this student, but can't validate the exit based on rules
+                                AddEvent(false, sd.ShortInfo + Environment.NewLine + "Érvénytelen kilépés");
+                                Log.Information(cardID + ",EXIT,Érvénytelen kilépés," + sd.ShortInfo + "," + studentID);
+                                this.pictureBoxStudentFace.BackColor = Color.Red;
+                            }
+                        } else {
+                            AddEvent(false, sd.ShortInfo + Environment.NewLine + "Érvénytelen kártya " + sd.ValidFromS);
+                            Log.Information(cardID + ",EXIT,Érvénytelen kártya," + sd.ShortInfo + "," + sd.ValidFromS);
                             this.pictureBoxStudentFace.BackColor = Color.Red;
                         }
                     }
-                    else
-                    {
-                        AddEvent(sd.ShortInfo + Environment.NewLine + "Érvénytelen kártya " + sd.ValidFromS);
-                        Log.Information(cardID + ",EXIT,Érvénytelen kártya," + sd.ShortInfo+","+ sd.ValidFromS);
-                        this.pictureBoxStudentFace.BackColor = Color.Red;
-                    }
-                }
-                else
-                {
+                } else {
                     DisposeImage();
                     this.pictureBoxStudentFace.BackColor = Color.Red;
                     label1.Invoke(new Action(() => label1.Text = "Ismeretlen kártya" + Environment.NewLine + cardID));
-                    AddEvent("Ismeretlen kártya " + Environment.NewLine + cardID);
+                    AddEvent(false, "Ismeretlen kártya " + Environment.NewLine + cardID);
                     Log.Information(cardID + ",EXIT,Ismeretlen kártya");
                 }
                 imageRemove.Start();
-            }
-            else if (ConfigurationManager.AppSettings["entrancereadername"].Equals(readerName))
-            {
-                if (dict.ContainsKey(cardID))
-                {
+            } else if (ConfigurationManager.AppSettings["entrancereadername"].Equals(readerName)) {
+                if (dict.ContainsKey(cardID)) {
                     string studentID = dict[cardID];
-                    StudentData sd = new StudentData(studentID);
-                    if (sd.CardValid(DateTime.Now))
-                    {
-                        if (sd.HasMatchingRule(DateTime.Now))
-                        {
-                            Log.Information(cardID + ",ENTRY,Érvényes belépés," + sd.ShortInfo + "," + studentID);
+                    StudentData sd = StudentData.Load(studentID);
+                    if (sd==null) {
+                        AddEvent(true, "Diák adatok nem beolvashatóak " + Environment.NewLine + dict[cardID]);
+                        Log.Information(cardID + ",ENTRY,Adathiba,"+dict[cardID]);
+                    } else {
+                        if (sd.CardValid(DateTime.Now)) {
+                            if (sd.HasMatchingRule(DateTime.Now)) {
+                                AddEvent(true, sd.ShortInfo + Environment.NewLine + "Érvényes belépés");
+                                Log.Information(cardID + ",ENTRY,Érvényes belépés," + sd.ShortInfo + "," + studentID);
+                            } else {
+                                AddEvent(true, sd.ShortInfo + Environment.NewLine + "Érvénytelen belépés");
+                                Log.Information(cardID + ",ENTRY,Érvénytelen belépés," + sd.ShortInfo + "," + studentID);
+                            }
+                        } else {
+                            AddEvent(true, sd.ShortInfo + Environment.NewLine + "Érvénytelen kártya " + sd.ValidFromS);
+                            Log.Information(cardID + ",ENTRY,Érvénytelen kártya," + sd.ShortInfo + "," + sd.ValidFromS);
                         }
-                        else
-                        {
-                            Log.Information(cardID + ",ENTRY,Érvénytelen belépés," + sd.ShortInfo + "," + studentID);
-                        }
                     }
-                    else
-                    {
-                        Log.Information(cardID + ",ENTRY,Érvénytelen kártya," + sd.ShortInfo + "," + sd.ValidFromS);
-
-                    }
-                    {
-                        Log.Information(cardID + ",ENTRY,Ismeretlen kártya");
-                    }
+                } else {
+                    AddEvent(true, "Ismeretlen kártya " + Environment.NewLine + cardID);
+                    Log.Information(cardID + ",ENTRY,Ismeretlen kártya");
                 }
-            } else
-            {
+            } else {
                 Log.Information("UNKNOWN,card read event received," + readerName + "," + cardID);
             }
         }
 
 
-        private void ShowStudentPicture(string studentID)
-        {
+        private void ShowStudentPicture(string studentID) {
             DisposeImage();
-            string currPath = ConfigurationManager.AppSettings["configdir"] + "\\";
             string imagepath = Path.GetFullPath(Path.Combine(currPath, studentID)) + ".jpg";
-            if (File.Exists(imagepath))
-            {
+            if (File.Exists(imagepath)) {
                 Image studImg = Image.FromFile(imagepath);
+
+                if (studImg.Width != 480 || studImg.Height != 640) {
+                    Image resizedImage = ResizeImage(studImg, 480, 640);
+                    studImg.Dispose(); //otherwise we have to save with different name
+                    resizedImage.Save(Path.GetFullPath(Path.Combine(currPath, studentID)) + ".jpg", ImageFormat.Jpeg);
+                    studImg = resizedImage;
+                }
+
                 this.pictureBoxStudentFace.Image = studImg;
             }
-            
+
         }
 
-        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
-        {
+        /// <summary>
+        /// Resize the image to the specified width and height.
+        /// </summary>
+        /// <param name="image">The image to resize.</param>
+        /// <param name="width">The width to resize to.</param>
+        /// <param name="height">The height to resize to.</param>
+        /// <returns>The resized image.</returns>
+        public static Bitmap ResizeImage(Image image, int width, int height) {
+            var destRect = new Rectangle(0, 0, width, height);
+            var destImage = new Bitmap(width, height);
+
+            destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
+
+            using (var graphics = Graphics.FromImage(destImage)) {
+                graphics.CompositingMode = CompositingMode.SourceCopy;
+                graphics.CompositingQuality = CompositingQuality.HighQuality;
+                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                graphics.SmoothingMode = SmoothingMode.HighQuality;
+                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+
+                using (var wrapMode = new ImageAttributes()) {
+                    wrapMode.SetWrapMode(WrapMode.TileFlipXY);
+                    graphics.DrawImage(image, destRect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, wrapMode);
+                }
+            }
+
+            return destImage;
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e) {
             Application.Exit();
         }
-        private void DetectReadersMenuItem_Click(object sender, EventArgs e)
-        {
-            AddEvent("READERLIST"+ Environment.NewLine + string.Join(Environment.NewLine, Program.GetReaderNames()));
+        private void DetectReadersMenuItem_Click(object sender, EventArgs e) {
+            AddEvent(false,"READERLIST" + Environment.NewLine + string.Join(Environment.NewLine, Program.GetReaderNames()));
         }
+
+        private void SwitchEventsMenuItem_Click(object sender, EventArgs e) {
+            showEntryEvents = !showEntryEvents;
+            this.switchEventsToolStripMenuItem.Checked = showEntryEvents;
+            ShowEvents();
+        }
+
     }
 }

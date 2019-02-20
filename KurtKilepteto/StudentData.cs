@@ -17,21 +17,31 @@ namespace KurtKilepteto
         private string validFromS;
         private string[] rules;
 
-        public StudentData(string studentID)
+        private StudentData(string studentID)
         {
             this.StudentID = studentID;
+        }
 
-            //read student's txt
+        public static StudentData Load(string studentID) {
             string currPath = ConfigurationManager.AppSettings["configdir"] + "\\";
-            string[] lines = File.ReadLines(Path.GetFullPath(Path.Combine(currPath, studentID)) + ".txt", Encoding.UTF8).ToArray();
-            ShortInfo = lines[0];
-            StudentInfo = lines[0] + Environment.NewLine + lines[1];
-            studentNote = lines[2];
-            ValidFromS = lines[3];
-            string[] dateparts = lines[3].Split('-');
-            ValidFrom = new DateTime(Convert.ToInt32(dateparts[0]), Convert.ToInt32(dateparts[1]), Convert.ToInt32(dateparts[2]));
-            rules = new string[lines.Length - 4];
-            System.Array.Copy(lines,4,rules,0,lines.Length-4);
+            string studentFile = Path.GetFullPath(Path.Combine(currPath, studentID)) + ".txt";
+            //read student's txt
+            if (File.Exists(studentFile)) {
+                string[] lines = File.ReadLines(studentFile, Encoding.UTF8).ToArray();
+                if (lines.Length>=5) { // alapadatok es legalabb egy szabaly sor
+                    StudentData sd = new StudentData(studentID);
+                    sd.ShortInfo = lines[0];
+                    sd.StudentInfo = lines[0] + Environment.NewLine + lines[1];
+                    sd.studentNote = lines[2];
+                    sd.ValidFromS = lines[3];
+                    string[] dateparts = lines[3].Split('-');
+                    sd.ValidFrom = new DateTime(Convert.ToInt32(dateparts[0]), Convert.ToInt32(dateparts[1]), Convert.ToInt32(dateparts[2]));
+                    sd.rules = new string[lines.Length - 4];
+                    System.Array.Copy(lines, 4, sd.rules, 0, lines.Length-4);
+                    return sd;
+                }
+            }
+            return null;
         }
 
         public string StudentID { get => studentID; set => studentID = value; }
