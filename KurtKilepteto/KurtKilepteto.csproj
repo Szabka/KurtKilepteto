@@ -103,13 +103,16 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Content Include="configs\XOXO.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="configs\evf2018\diak01.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="configs\evf2018\diak01.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="configs\evf2018\diak02.jpg">
+    <Content Include="configs\XOXO.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="configs\evf2018\diak03.jpg">

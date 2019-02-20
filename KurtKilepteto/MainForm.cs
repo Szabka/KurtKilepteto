@@ -29,15 +29,29 @@ namespace KurtKilepteto
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            OptimizePicturesSize();
-            dict = File.ReadLines(ConfigurationManager.AppSettings["configdir"]+"\\nyilvantartas.csv").Select(line => line.Split(';')).ToDictionary(line => line[0], line => line[1]);
+            dict = new Dictionary<string, string>();
 
             imageRemove = new System.Timers.Timer();
             imageRemove.AutoReset = false;
             imageRemove.Interval = int.Parse(ConfigurationManager.AppSettings["imageshowtime"]) * SECOND;
             imageRemove.Elapsed += ImageRemoveTick;
             imageRemove.SynchronizingObject = this;
+            imageRemove.Stop();
 
+            var lines = File.ReadAllLines(ConfigurationManager.AppSettings["configdir"] + "\\nyilvantartas.csv");
+            foreach (var liner in lines)
+            {
+                if (liner.Length>1&&!liner.StartsWith("#"))
+                {
+                    string[] linearr = liner.Split(',');
+                    if (linearr.Length==2)
+                    {
+                        dict.Add(linearr[1].ToUpper(),linearr[0]);
+                    }
+                }
+            }
+
+            OptimizePicturesSize();
         }
 
         private void ImageRemoveTick(Object myObject, System.Timers.ElapsedEventArgs myEventArgs)
@@ -60,19 +74,26 @@ namespace KurtKilepteto
         {
             //AddEvent("Student image resize started.");
             //read all possible image path in an array
-            var lines = File.ReadAllLines(ConfigurationManager.AppSettings["configdir"]+"\\nyilvantartas.csv").Select(a => a.Split(';')[1]);
+            var lines = File.ReadAllLines(ConfigurationManager.AppSettings["configdir"]+"\\nyilvantartas.csv");
             string currPath = ConfigurationManager.AppSettings["configdir"] + "\\";
 
             //select and resize every image what we should
-            foreach (var line in lines)
-            {                
-                Image studImg = Image.FromFile(Path.GetFullPath(Path.Combine(currPath, line)) + ".jpg");
+            foreach (var liner in lines)
+            {
+                string[] linearr = liner.Split(','); 
+                if (!liner.StartsWith("#")&&linearr.Length==2) {
+                    string imagepath = Path.GetFullPath(Path.Combine(currPath, linearr[0])) + ".jpg";
+                    if (File.Exists(imagepath))
+                    {
+                        Image studImg = Image.FromFile(imagepath);
 
-                if (studImg.Width != 480 || studImg.Height != 640)
-                {
-                    Image resizedImage = resizeImage(studImg, new Size(480, 640));
-                    studImg.Dispose(); //otherwise we have to save with different name
-                    resizedImage.Save(Path.GetFullPath(Path.Combine(currPath, line)) + ".jpg",ImageFormat.Jpeg);
+                        if (studImg.Width != 480 || studImg.Height != 640)
+                        {
+                            Image resizedImage = resizeImage(studImg, new Size(480, 640));
+                            studImg.Dispose(); //otherwise we have to save with different name
+                            resizedImage.Save(Path.GetFullPath(Path.Combine(currPath, linearr[0])) + ".jpg", ImageFormat.Jpeg);
+                        }
+                    }
                 }
             }
 
@@ -175,7 +196,7 @@ namespace KurtKilepteto
 
                     }
                     {
-                        Log.Information(cardID + ",ENTRY,Ismeretlen kártya," + cardID);
+                        Log.Information(cardID + ",ENTRY,Ismeretlen kártya");
                     }
                 }
             } else
@@ -188,9 +209,13 @@ namespace KurtKilepteto
         private void ShowStudentPicture(string studentID)
         {
             DisposeImage();
-            string currPath = ConfigurationManager.AppSettings["configdir"] + "\\";           
-            Image studImg = Image.FromFile(Path.GetFullPath(Path.Combine(currPath, studentID))  + ".jpg");
-            this.pictureBoxStudentFace.Image = studImg;
+            string currPath = ConfigurationManager.AppSettings["configdir"] + "\\";
+            string imagepath = Path.GetFullPath(Path.Combine(currPath, studentID)) + ".jpg";
+            if (File.Exists(imagepath))
+            {
+                Image studImg = Image.FromFile(imagepath);
+                this.pictureBoxStudentFace.Image = studImg;
+            }
             
         }
 

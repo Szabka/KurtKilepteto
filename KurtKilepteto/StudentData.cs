@@ -58,7 +58,11 @@ namespace KurtKilepteto
                     if ((day.ToUpper().StartsWith(hunAbrevDayName.ToUpper())) || hunAbrevDayName.Equals("*"))
                     {
                         //allowed interval on specific day
-                        string fullInterval = rules[i].Split(',')[1]; ;
+                        string fullInterval = rules[i].Split(',')[1]; 
+                        if (fullInterval.Equals("*"))
+                        {
+                            return true;
+                        }
                         string intervalStart = fullInterval.Split('-')[0];
                         string intervalEnd = fullInterval.Split('-')[1];
 
