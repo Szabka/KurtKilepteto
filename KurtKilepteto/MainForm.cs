@@ -46,7 +46,12 @@ namespace KurtKilepteto {
                 if (liner.Length > 1 && !liner.StartsWith("#") && liner.Contains(",")) {
                     string[] linearr = liner.Split(',');
                     if (linearr.Length == 2&&linearr[1].Length==8) { // Csak akkor foglalkozunk vele, ha a cardid bennevan
-                        dict.Add(linearr[1].ToUpper(), linearr[0]);
+                        string cardid = linearr[1].ToUpper();
+                        if (!dict.ContainsKey(cardid)) {
+                            dict.Add(cardid, linearr[0]);
+                        } else {
+                            Log.Error("Double entry for the same cardid:"+cardid+" e1:"+dict[cardid]+" e2:"+linearr[0] );
+                        }
                     }
                 }
             }

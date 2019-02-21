@@ -31,6 +31,7 @@ namespace KurtKilepteto
 
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.File(logFilename, outputTemplate: "{Timestamp:yyyy-MM-dd,HH:mm:ss},{Message:lj}{NewLine}{Exception}", restrictedToMinimumLevel: LogEventLevel.Information, rollingInterval: RollingInterval.Day)
+                .WriteTo.File("kkdebug.log")
                 .WriteTo.Trace()
                 .CreateLogger();
 
@@ -92,7 +93,11 @@ namespace KurtKilepteto
                 string uid = GetCardUID(ea.ReaderName);
                 if (uid != null)
                 {
-                    mf.CardRead(ea.ReaderName, uid);
+                    try {
+                        mf.CardRead(ea.ReaderName, uid);
+                    } catch (Exception e) {
+                        Log.Error(e,"Card event process error.");
+                    }
                 }
             }
 
